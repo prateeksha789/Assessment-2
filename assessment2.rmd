@@ -1,0 +1,142 @@
+---
+title: "Assessment - 2"
+author: "Prateeksha 4658793"
+date: "10/09/2021"
+output: html_document
+---
+## *Prateeksha* **4658793**
+
+------------------------------------
+
+# Assignment 2
+
+------------------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(skimr)
+```
+
+
+### Load dataset and naming it as  ilovefood.
+
+```{r}
+ilovefood <- read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-11-20/thanksgiving_meals.csv")
+```
+
+### Display the first 10 rows of the dataset using RMarkdown
+
+```{r 10 rows}
+ilovefood %>% head(10) %>% 
+  kable()
+```
+
+### Use fct_reorder and parse_number functions to create a factor variable family_income
+
+```{r }
+ilovefood <- ilovefood %>%
+       mutate(family_income = fct_reorder(family_income, parse_number(family_income)))
+```
+
+### Generate the general statistics of the dataset using summary() and skim() function.
+
+```{r }
+skim(ilovefood) %>% 
+  kable()
+summary(ilovefood) %>% 
+  kable()
+```
+
+### What is the number of people who celebrate?
+
+```{r}
+ilovefood %>% filter(celebrate == "Yes") %>% 
+count(celebrate, sort = TRUE) %>% 
+  kable()
+```
+
+
+### What are categories and stats for each main dish served and the method it is prepared?
+### Create a data viz showing this in the most evident way. Provide your own legend and use themes.
+
+
+```{r }
+ilovefood %>%  count(main_dish, main_prep, sort = TRUE) %>% 
+  filter(main_dish != "NA") %>% 
+  ggplot(aes(n,main_prep,fill = n)) +
+  geom_col() +
+  facet_wrap(~main_dish) 
+```
+
+### How many use cranberry sauce? How many use gravy?
+
+```{r}
+ilovefood %>%  count(cranberry, sort = TRUE) %>% 
+  kable()
+ilovefood %>% filter(gravy == "Yes") %>% 
+  count (gravy,sort = TRUE) %>% 
+  kable() 
+```
+
+
+### What is the distribution of those who celebrate across income ranges
+### Present this information in the most evident way on the data viz.
+
+```{r}
+ilovefood %>% filter(celebrate == "Yes") %>%  
+  count(family_income, celebrate, sort = TRUE) %>% 
+  ggplot(aes(n, family_income, fill = n)) +
+  geom_col()
+```
+
+
+### What are the most common pies, sides, and desserts?
+
+```{r }
+pie <- ilovefood %>% 
+  select(starts_with("pie"), -pie13) %>% 
+  gather(type, value) %>% 
+  count(type, value, sort = TRUE) %>% 
+  na.omit(value) %>% 
+  filter(type == "pie9")
+sides <- ilovefood %>% 
+  select(starts_with("side")) %>% 
+  gather(type, value) %>% 
+  count(type, value, sort = TRUE) %>% 
+  na.omit(value) %>% 
+  filter(type == "side9")
+desserts <- ilovefood %>% 
+  select(starts_with("dessert")) %>% 
+  gather(type, value) %>% 
+  count(type, value, sort = TRUE) %>% na.omit(value) %>% 
+  filter(value != "None") %>% 
+  filter(type == "dessert8")
+  
+```
+
+
+
+### Present this information on a data viz
+
+
+```{r}
+commonfoods <- rbind(pie, sides, desserts) 
+commonfoods %>% ggplot(aes(type, n, fill = value)) +
+  geom_col() 
+```
+
+### How do the servings differ by income?
+### Present this information on a data viz.
+
+```{r}
+ilovefood %>% count(main_dish, family_income)%>%
+  na.omit(main_dish)%>%
+  na.omit(family_income)%>% 
+  ggplot(aes(main_dish, n, fill = family_income)) +
+  geom_col() +
+  facet_wrap(family_income~.,)+
+  coord_flip() 
+```
+
